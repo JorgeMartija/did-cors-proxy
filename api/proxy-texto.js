@@ -1,31 +1,36 @@
-res.setHeader('Access-Control-Allow-Origin', '*');
-res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export const config = {
+  runtime: 'edge',
+};
 
-if (req.method === 'OPTIONS') {
-  return res.status(200).end();
-}
-
-export default async function handler(req, res) {
+export default async function handler(req) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Only POST allowed' });
+    return new Response(JSON.stringify({ message: 'Only POST allowed' }), {
+      status: 405,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
   }
 
-  const { stream_id, session_id, ...rest } = req.body;
+  const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
 
-  const response = await fetch(`https://api.d-id.com/talks/streams/${stream_id}`, {
+  const apiRes = await fetch('https://api.d-id.com/talks/streams', {
     method: 'POST',
     headers: {
-      'Authorization': 'Basic ' + process.env.DID_API_KEY,
-      'Content-Type': 'application/json'
+      'Authorization': apiKey,
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      ...rest,
-      session_id
-    })
+    body: req.body,
   });
 
-  const data = await response.json();
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.status(response.status).json(data);
+  const data = await apiRes.text();
+
+  return new Response(data, {
+    status: apiRes.status,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json',
+    },
+  });
 }
