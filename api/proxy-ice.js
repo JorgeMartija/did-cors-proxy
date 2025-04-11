@@ -3,38 +3,22 @@ export const config = {
 };
 
 export default async function handler(req) {
-  // Manejar preflight OPTIONS
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ message: 'Only POST allowed' }), {
+      status: 405,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        'Content-Type': 'application/json',
       },
     });
   }
 
-  // Solo permitir POST
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ message: 'Only POST allowed' }),
-      {
-        status: 405,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-  }
+  const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
 
-  // Aquí reemplaza con tu stream ID real si es fijo,
-  // o si lo recibes por query, puedes extraerlo de la URL.
-  const apiRes = await fetch('https://api.d-id.com/talks/streams/YOUR_STREAM_ID/ice', {
+  const apiRes = await fetch('https://api.d-id.com/talks/streams/ice', {
     method: 'POST',
     headers: {
-      'Authorization': req.headers.get('Authorization'),
+      'Authorization': apiKey,
       'Content-Type': 'application/json',
     },
     body: req.body,
