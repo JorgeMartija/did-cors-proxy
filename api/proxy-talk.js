@@ -3,37 +3,22 @@ export const config = {
 };
 
 export default async function handler(req) {
-  // Preflight request para CORS
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ message: 'Only POST allowed' }), {
+      status: 405,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        'Content-Type': 'application/json',
       },
     });
   }
 
-  // Solo permitir POST
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ message: 'Only POST allowed' }),
-      {
-        status: 405,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-  }
+  const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
 
-  // Reemplaza con tu stream ID fijo o hazlo dinámico si lo necesitas
-  const apiRes = await fetch('https://api.d-id.com/talks/streams/YOUR_STREAM_ID', {
+  const apiRes = await fetch('https://api.d-id.com/talks', {
     method: 'POST',
     headers: {
-      'Authorization': req.headers.get('Authorization'),
+      'Authorization': apiKey,
       'Content-Type': 'application/json',
     },
     body: req.body,
