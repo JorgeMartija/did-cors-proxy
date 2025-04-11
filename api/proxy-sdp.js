@@ -1,32 +1,51 @@
-export default async function handler(req, res) {
-  // 🔐 CORS HEADERS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export const config = {
+  runtime: 'edge',
+};
 
+export default async function handler(req) {
+  // Manejar preflight OPTIONS
   if (req.method === 'OPTIONS') {
-    return res.status(200).end(); // Respuesta rápida a preflight
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+      },
+    });
   }
 
+  // Solo permitir POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Only POST allowed' });
+    return new Response(
+      JSON.stringify({ message: 'Only POST allowed' }),
+      {
+        status: 405,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   }
 
-  const { answer, session_id } = req.body;
-
-  const response = await fetch(`https://api.d-id.com/talks/streams/${session_id}/sdp`, {
+  // Realiza el proxy hacia D-ID
+  const apiRes = await fetch('https://api.d-id.com/talks/streams/YOUR_STREAM_ID/sdp', {
     method: 'POST',
     headers: {
-      'Authorization': 'Basic ' + process.env.DID_API_KEY,
+      'Authorization': req.headers.get('Authorization'),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      answer,
-      session_id
-    })
+    body: req.body,
   });
 
-  const data = await response.json();
-  res.status(response.status).json(data);
-}
+  const data = await apiRes.text();
 
+  return new Response(data, {
+    status: apiRes.status,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json',
+    },
+  });
+}
