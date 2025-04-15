@@ -14,14 +14,32 @@ export default async function handler(req) {
   }
 
   const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
+  const body = await req.json();
 
-  const apiRes = await fetch('https://api.d-id.com/talks', {
+  const { stream_id, script, config, audio_optimization, session_id } = body;
+
+  if (!stream_id || !script || !config || !audio_optimization || !session_id) {
+    return new Response(JSON.stringify({ message: 'Missing required fields' }), {
+      status: 400,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  const apiRes = await fetch(`https://api.d-id.com/talks/streams/${stream_id}`, {
     method: 'POST',
     headers: {
       'Authorization': apiKey,
       'Content-Type': 'application/json',
     },
-    body: req.body,
+    body: JSON.stringify({
+      script,
+      config,
+      audio_optimization,
+      session_id
+    }),
   });
 
   const data = await apiRes.text();
