@@ -3,7 +3,6 @@ export const config = {
 };
 
 export default async function handler(req) {
-  // Manejar la petición OPTIONS para CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -26,8 +25,8 @@ export default async function handler(req) {
   }
 
   const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
-  const bodyText = await req.text();
-  const body = JSON.parse(bodyText);
+  const rawBody = await req.text();
+  const body = JSON.parse(rawBody);
 
   const { stream_id, answer, session_id } = body;
 
