@@ -3,7 +3,6 @@ export const config = {
 };
 
 export default async function handler(req) {
-  // Soporte CORS para preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -25,19 +24,8 @@ export default async function handler(req) {
     });
   }
 
-  const apiKey = 'Basic cmV0YXpvc3lmcmFtZXNAZ21haWwuY29t:0hQSimebYtbycSBFcLHsf
-';
-
-  const rawBody = await req.text();
-  const parsedBody = JSON.parse(rawBody);
-  const { stream_id, ...rest } = parsedBody;
-
-  if (!stream_id) {
-    return new Response(JSON.stringify({ message: 'Missing stream_id' }), {
-      status: 400,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-    });
-  }
+  const apiKey = 'Basic cmV0YXpvc3lmcmFtZXNAZ21haWwuY29t:0hQSimebYtbycSBFcLHsf';
+  const { text, stream_id } = await req.json();
 
   const apiRes = await fetch(`https://api.d-id.com/talks/streams/${stream_id}`, {
     method: 'POST',
@@ -45,7 +33,12 @@ export default async function handler(req) {
       'Authorization': apiKey,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(rest),
+    body: JSON.stringify({
+      script: {
+        type: 'text',
+        input: text,
+      },
+    }),
   });
 
   const data = await apiRes.text();
