@@ -3,6 +3,7 @@ export const config = {
 };
 
 export default async function handler(req) {
+  // Soporte CORS para preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -26,8 +27,9 @@ export default async function handler(req) {
 
   const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
 
-  const body = await req.json();
-  const { stream_id, ...rest } = body;
+  const rawBody = await req.text();
+  const parsedBody = JSON.parse(rawBody);
+  const { stream_id, ...rest } = parsedBody;
 
   if (!stream_id) {
     return new Response(JSON.stringify({ message: 'Missing stream_id' }), {
