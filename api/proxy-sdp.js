@@ -24,38 +24,54 @@ export default async function handler(req) {
     });
   }
 
-  const apiKey = 'Basic cmV0YXpvc3lmcmFtZXNAZ21haWwuY29t:0hQSimebYtbycSBFcLHsf';
-  const rawBody = await req.text();
-  const body = JSON.parse(rawBody);
+  try {
+    const apiKey = 'Basic cmV0YXpvc3lmcmFtZXNAZ21haWwuY29t:0hQSimebYtbycSBFcLHsf';
+    const rawBody = await req.text();
+    const body = JSON.parse(rawBody);
 
-  const { stream_id, answer, session_id } = body;
+    const { stream_id, answer, session_id } = body;
 
-  if (!stream_id || !answer || !session_id) {
-    return new Response(JSON.stringify({ message: 'Missing required fields' }), {
-      status: 400,
+    if (!stream_id || !answer || !session_id || !answer.sdp || !answer.type) {
+      return new Response(JSON.stringify({ message: 'Missing required fields' }), {
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
+    const apiRes = await fetch(`https://api.d-id.com/talks/streams/${stream_id}/sdp`, {
+      method: 'POST',
+      headers: {
+        'Authorization': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        answer: {
+          sdp: answer.sdp,
+          type: 'answer'  // Aseguramos que va como pide D-ID
+        },
+        session_id,
+      }),
+    });
+
+    const data = await apiRes.text();
+
+    return new Response(data, {
+      status: apiRes.status,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ message: 'Server error', error: err.message }), {
+      status: 500,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
       },
     });
   }
-
-  const apiRes = await fetch(`https://api.d-id.com/talks/streams/${stream_id}/sdp`, {
-    method: 'POST',
-    headers: {
-      'Authorization': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ answer, session_id }),
-  });
-
-  const data = await apiRes.text();
-
-  return new Response(data, {
-    status: apiRes.status,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Content-Type': 'application/json',
-    },
-  });
 }
