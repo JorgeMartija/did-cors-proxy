@@ -24,30 +24,58 @@ export default async function handler(req) {
     });
   }
 
-  const apiKey = 'Basic cmV0YXpvc3lmcmFtZXNAZ21haWwuY29t:0hQSimebYtbycSBFcLHsf';
-  const { text, stream_id } = await req.json();
+  try {
+    const apiKey = 'Basic cmV0YXpvc3lmcmFtZXNAZ21haWwuY29t:0hQSimebYtbycSBFcLHsf';
+    const rawBody = await req.text();
+    const {
+      stream_id,
+      session_id,
+      script,
+      config,
+      audio_optimization
+    } = JSON.parse(rawBody);
 
-  const apiRes = await fetch(`https://api.d-id.com/talks/streams/${stream_id}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      script: {
-        type: 'text',
-        input: text,
+    if (!stream_id || !session_id || !script || !script.input) {
+      return new Response(JSON.stringify({ message: 'Missing required fields' }), {
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
+    const apiRes = await fetch(`https://api.d-id.com/talks/streams/${stream_id}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': apiKey,
+        'Content-Type': 'application/json',
       },
-    }),
-  });
+      body: JSON.stringify({
+        session_id,
+        script,
+        config,
+        audio_optimization
+      }),
+    });
 
-  const data = await apiRes.text();
+    const data = await apiRes.text();
 
-  return new Response(data, {
-    status: apiRes.status,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Content-Type': 'application/json',
-    },
-  });
+    return new Response(data, {
+      status: apiRes.status,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ message: 'Server error', error: err.message }), {
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 }
