@@ -26,15 +26,18 @@ export default async function handler(req) {
   }
 
   const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
+  const bodyText = await req.text();
+  const body = JSON.parse(bodyText);
 
-  const rawBody = await req.text();
-  const parsedBody = JSON.parse(rawBody);
-  const { stream_id, ...rest } = parsedBody;
+  const { stream_id, answer, session_id } = body;
 
-  if (!stream_id) {
-    return new Response(JSON.stringify({ message: 'Missing stream_id' }), {
+  if (!stream_id || !answer || !session_id) {
+    return new Response(JSON.stringify({ message: 'Missing required fields' }), {
       status: 400,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
     });
   }
 
@@ -44,7 +47,7 @@ export default async function handler(req) {
       'Authorization': apiKey,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(rest),
+    body: JSON.stringify({ answer, session_id }),
   });
 
   const data = await apiRes.text();
