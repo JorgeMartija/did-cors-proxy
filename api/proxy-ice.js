@@ -3,7 +3,6 @@ export const config = {
 };
 
 export default async function handler(req) {
-  // Manejo de preflight CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -26,15 +25,25 @@ export default async function handler(req) {
   }
 
   const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
-  const body = await req.text(); // Importante: usar .text() para edge functions
+  const rawBody = await req.text(); // <-- Esto es clave
 
-  const apiRes = await fetch('https://api.d-id.com/talks/streams/ice', {
+  const parsedBody = JSON.parse(rawBody);
+  const { stream_id, ...icePayload } = parsedBody;
+
+  if (!stream_id) {
+    return new Response(JSON.stringify({ message: 'Missing stream_id' }), {
+      status: 400,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
+  const apiRes = await fetch(`https://api.d-id.com/talks/streams/${stream_id}/ice`, {
     method: 'POST',
     headers: {
       'Authorization': apiKey,
       'Content-Type': 'application/json',
     },
-    body,
+    body: JSON.stringify(icePayload),
   });
 
   const data = await apiRes.text();
