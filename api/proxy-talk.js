@@ -25,7 +25,7 @@ export default async function handler(req) {
     });
   }
 
-  const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
+  const apiKey = 'Basic cmV0YXpvc3lmcmFtZXNAZ21haWwuY29t:0hQSimebYtbycSBFcLHsf';
 
   const rawBody = await req.text();
   const parsedBody = JSON.parse(rawBody);
