@@ -26,15 +26,25 @@ export default async function handler(req) {
   }
 
   const apiKey = 'Basic bXVqZXJudWV2YXlvcmtAZ21haWwuY29t:S-4z6mEBXggmFep6ymhBw';
-  const body = await req.text(); // 👈 Importante: usar .text() en runtime edge
 
-  const apiRes = await fetch('https://api.d-id.com/talks/streams/sdp', {
+  const rawBody = await req.text();
+  const parsedBody = JSON.parse(rawBody);
+  const { stream_id, ...rest } = parsedBody;
+
+  if (!stream_id) {
+    return new Response(JSON.stringify({ message: 'Missing stream_id' }), {
+      status: 400,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
+  const apiRes = await fetch(`https://api.d-id.com/talks/streams/${stream_id}/sdp`, {
     method: 'POST',
     headers: {
       'Authorization': apiKey,
       'Content-Type': 'application/json',
     },
-    body,
+    body: JSON.stringify(rest),
   });
 
   const data = await apiRes.text();
